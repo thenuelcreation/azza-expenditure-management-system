@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import "dotenv/config";
 import express, { type Request, type Response } from "express";
 
@@ -55,12 +56,16 @@ database
   .run(Math.floor(Date.now() / 1000));
 
 // Detect password column name for migrations from older schemas
-const userTableInfo = database.prepare("PRAGMA table_info(users)").all() as any[];
+const userTableInfo = database
+  .prepare("PRAGMA table_info(users)")
+  .all() as any[];
 const hasPasswordHash = userTableInfo.some((c) => c.name === "password_hash");
 const passwordColumn = hasPasswordHash ? "password_hash" : "password";
 
 // Detect sessions schema differences (older DBs use token_hash + integer id)
-const sessionsTableInfo = database.prepare("PRAGMA table_info(sessions)").all() as any[];
+const sessionsTableInfo = database
+  .prepare("PRAGMA table_info(sessions)")
+  .all() as any[];
 const hasTokenHash = sessionsTableInfo.some((c) => c.name === "token_hash");
 
 // Middleware

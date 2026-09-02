@@ -17,6 +17,7 @@
   "type": "commonjs",
   "dependencies": {
     "better-sqlite3": "^13.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -24,6 +25,7 @@
     "tsx": "^4.23.12"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.1",
     "@types/node": "^26.2.0",
