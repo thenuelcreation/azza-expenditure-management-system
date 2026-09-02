@@ -7,6 +7,7 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "tsx server/index.ts",
     "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
     "start": "tsx server/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -19,7 +20,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "nodemailer": "^9.0.5"
+    "nodemailer": "^9.0.5",
+    "tsx": "^4.23.12"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -27,7 +29,6 @@
     "@types/node": "^26.2.0",
     "@types/nodemailer": "^8.0.1",
     "concurrently": "^10.0.5",
-    "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   }
 }
