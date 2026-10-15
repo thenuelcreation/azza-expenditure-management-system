@@ -4,11 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "tsx server/index.ts",
-    "dev:client": "npm --prefix client run dev",
-    "build": "npm --prefix client run build",
-    "start": "tsx server/index.ts",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "tsx backend/index.ts",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm run db:generate && npm --prefix frontend run build",
+    "postinstall": "prisma generate --schema backend/prisma/schema.prisma",
+    "start": "tsx backend/index.ts",
+    "db:generate": "prisma generate --schema backend/prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema backend/prisma/schema.prisma",
+    "db:deploy": "prisma migrate deploy --schema backend/prisma/schema.prisma",
+    "check:backend": "tsc --project tsconfig.backend.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,12 +21,13 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "better-sqlite3": "^13.0.3",
+    "@prisma/client": "^6.19.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "nodemailer": "^9.0.5",
+    "prisma": "^6.19.3",
     "tsx": "^4.23.12"
   },
   "devDependencies": {
@@ -32,5 +38,11 @@
     "@types/nodemailer": "^8.0.1",
     "concurrently": "^10.0.5",
     "typescript": "^7.0.2"
+  },
+  "allowScripts": {
+    "@prisma/client": true,
+    "@prisma/engines": true,
+    "esbuild": true,
+    "prisma": true
   }
 }

@@ -1,7 +1,5 @@
 node_modules/
-client/dist/
-server/azza.db
-server/azza.sqlite*
+frontend/dist/
 .env
 .env.*
 !.env.example
