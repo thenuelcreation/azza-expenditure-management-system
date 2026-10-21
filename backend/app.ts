@@ -246,45 +246,61 @@ async function sendPasswordResetEmail(
   email: string,
   token: string,
 ): Promise<PasswordResetEmailResult> {
-  const resetLink = `${process.env.CLIENT_ORIGIN ?? "http://localhost:5173"}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
-  const apiKey = process.env.BREVO_API_KEY;
-  const senderEmail = process.env.SMTP_FROM ?? process.env.SMTP_USER;
+  const clientOrigin =
+    process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
 
-  if (!apiKey || !senderEmail) {
+  const resetLink = `${clientOrigin}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+
+  const smtpHost = process.env.SMTP_HOST ?? "smtp.gmail.com";
+  const smtpPort = Number(process.env.SMTP_PORT ?? "587");
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+  const senderEmail = process.env.SMTP_FROM ?? smtpUser;
+
+  if (!smtpUser || !smtpPass || !senderEmail) {
     if (!isDevelopment) {
-      throw new Error("BREVO_API_KEY and SMTP_FROM must be configured to send reset emails.");
+      throw new Error(
+        "SMTP_USER, SMTP_PASS, and SMTP_FROM must be configured to send reset emails.",
+      );
     }
+
     return "not-configured";
   }
 
   try {
-    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "api-key": apiKey,
-        "content-type": "application/json",
-        accept: "application/json",
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
       },
-      body: JSON.stringify({
-        sender: { name: "AZZA", email: senderEmail },
-        to: [{ email }],
-        subject: "Reset your AZZA password",
-        textContent: `Use this reset token to change your password: ${token}\n\nOr open: ${resetLink}`,
-        htmlContent: `<p>Use the reset token below, or <a href="${resetLink}">open this link</a>.</p><p><strong>${token}</strong></p>`,
-      }),
     });
-    if (!response.ok) {
-      throw new Error(`Brevo responded with status ${response.status}`);
-    }
+
+    await transporter.sendMail({
+      from: {
+        name: "AZZA",
+        address: senderEmail,
+      },
+      to: email,
+      subject: "Reset your AZZA password",
+      text: `Use the link below to reset your password:\n\n${resetLink}\n\nIf you did not request this, ignore this email.`,
+      html: `<p>Click the link below to reset your AZZA password:</p><p><a href="${resetLink}">Reset your password</a></p><p>If you did not request this, ignore this email.</p>`,
+    });
+
     return "sent";
   } catch (error) {
+    console.error("Password reset email delivery failed:", error);
+
     if (!isDevelopment) {
       throw error;
     }
-    console.error("Password reset email delivery failed in development:", error);
+
     return "failed";
   }
 }
+
 
 app.post("/api/auth/signup", async (req: Request, res: Response) => {
   const { name, email, password } = req.body ?? {};
