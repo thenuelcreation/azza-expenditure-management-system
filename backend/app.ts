@@ -4,7 +4,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import "dotenv/config";
 import express, { type Request, type Response } from "express";
-import nodemailer from "nodemailer";
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 
@@ -240,6 +239,7 @@ async function createSession(userId: number): Promise<string> {
   return token;
 }
 
+
 type PasswordResetEmailResult = "sent" | "not-configured" | "failed";
 
 async function sendPasswordResetEmail(
@@ -251,55 +251,44 @@ async function sendPasswordResetEmail(
 
   const resetLink = `${clientOrigin}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
 
-  const smtpHost = process.env.SMTP_HOST ?? "smtp.gmail.com";
-  const smtpPort = Number(process.env.SMTP_PORT ?? "587");
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
-  const senderEmail = process.env.SMTP_FROM ?? smtpUser;
+  const apiKey = process.env.RESEND_API_KEY;
+  const senderEmail = process.env.RESEND_FROM;
 
-  if (!smtpUser || !smtpPass || !senderEmail) {
-    if (!isDevelopment) {
-      throw new Error(
-        "SMTP_USER, SMTP_PASS, and SMTP_FROM must be configured to send reset emails.",
-      );
-    }
-
-    return "not-configured";
+  if (!apiKey || !senderEmail) {
+    throw new Error(
+      "RESEND_API_KEY and RESEND_FROM must be configured to send reset emails.",
+    );
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
-
-    await transporter.sendMail({
-      from: {
-        name: "AZZA",
-        address: senderEmail,
-      },
-      to: email,
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: senderEmail,
+      to: [email],
       subject: "Reset your AZZA password",
       text: `Use the link below to reset your password:\n\n${resetLink}\n\nIf you did not request this, ignore this email.`,
       html: `<p>Click the link below to reset your AZZA password:</p><p><a href="${resetLink}">Reset your password</a></p><p>If you did not request this, ignore this email.</p>`,
-    });
+    }),
+  });
 
-    return "sent";
-  } catch (error) {
-    console.error("Password reset email delivery failed:", error);
-
-    if (!isDevelopment) {
-      throw error;
-    }
-
-    return "failed";
+  if (!response.ok) {
+    const details = await response.text();
+    console.error(
+      `Resend email delivery failed (HTTP ${response.status}):`,
+      details,
+    );
+    throw new Error(
+      `Password reset email delivery failed (HTTP ${response.status}).`,
+    );
   }
+
+  return "sent";
 }
+
 
 
 app.post("/api/auth/signup", async (req: Request, res: Response) => {
