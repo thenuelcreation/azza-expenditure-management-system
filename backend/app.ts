@@ -1,3 +1,4 @@
+/// <reference path="./express.d.ts" />
 import crypto from "node:crypto";
 import cors from "cors";
 import cookieParser from "cookie-parser";
