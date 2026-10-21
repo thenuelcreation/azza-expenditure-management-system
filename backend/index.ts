@@ -2,7 +2,7 @@ import "dotenv/config";
 import app from "./app";
 import { prisma } from "./db";
 
-const port = Number(process.env.PORT ?? 4000);
+const port = Number(process.env.PORT) || 4000;
 const host = process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1";
 
 async function start(): Promise<void> {

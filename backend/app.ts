@@ -8,6 +8,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 
 const app = express();
+app.set("trust proxy", 1);
 const isProduction = process.env.NODE_ENV === "production";
 const isDevelopment = process.env.NODE_ENV === "development";
 const allowedOrigins = new Set([
