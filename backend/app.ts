@@ -623,6 +623,10 @@ app.delete("/api/expenditures/:id", async (req: Request, res: Response) => {
   }
 });
 
+app.get("/", (_req: Request, res: Response) => {
+  res.json({ name: "AZZA API", status: "running" });
+});
+
 app.get("/health", async (_req: Request, res: Response) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
